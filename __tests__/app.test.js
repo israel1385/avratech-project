@@ -20,24 +20,24 @@ describe('Test the create user path', () => {
         // jest.setTimeout(30000);
 
         await db.sequelize
-          .getQueryInterface()
-          .dropAllTables();
+            .getQueryInterface()
+            .dropAllTables();
 
         const umzug = new Umzug({
-        migrations: {
-        params: [ db.sequelize.getQueryInterface(), db.Sequelize ],
-        path: "migrations"
-        },
-        storage: "sequelize",
-        storageOptions: {
-        sequelize: db.sequelize
-        },
-        logging: console.log
+            migrations: {
+                params: [db.sequelize.getQueryInterface(), db.Sequelize],
+                path: "migrations"
+            },
+            storage: "sequelize",
+            storageOptions: {
+                sequelize: db.sequelize
+            },
+            logging: console.log
         });
 
         await umzug.execute({
-        migrations: ["20191023175456-create-user"],
-        method: "up"
+            migrations: ["20191023175456-create-user"],
+            method: "up"
         })
 
         done()
@@ -48,21 +48,41 @@ describe('Test the create user path', () => {
             expect(response.statusCode).toBe(200)
         })
     });
-    
+
     it('should create new user in db with id 1', () => {
         return request(app).post("/users").then(response => {
-            return db.User.findByPk(1).then(user=>{
+            return db.User.findByPk(1).then(user => {
                 expect(user).not.toBeNull()
             })
         })
     });
-    it('should create only one user ',()=>{
+
+    it('should create only one user ', () => {
         return request(app).post("/users").then(response => {
-            const User= db.User
-            return User.findAll().then(users=>{
+            const User = db.User
+            return User.findAll().then(users => {
                 expect(users.length).toBe(1)
             })
         })
+    })
+    test('Created user should contain params', () => {
+        return request(app)
+            .post("/users")
+            .send({
+                firstName: 'israel',
+                lastName: "hershkovitz",
+                email: 'israel1385@gmail.com',
+            })
+            .then(response => {
+                const User = db.User
+                return User.findOne().then(users => {
+                    expect(users).toMatchObject({
+                        firstName: 'israel',
+                        lastName: "hershkovitz",
+                        email: 'israel1385@gmail.com',
+                    })
+                })
+            })
     })
 })
 
